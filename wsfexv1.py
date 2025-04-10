@@ -10,7 +10,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
 # for more details.
 
-"""Módulo para obtener CAE, código de autorización de impresión o electrónico, 
+"""Módulo para obtener CAE, código de autorización de impresión o electrónico,
 del web service WSFEXv1 de AFIP (Factura Electrónica Exportación Versión 1)
 según RG2758/2010 (Registros Especiales Aduaneros) y RG3689/14 (servicios)
 http://www.sistemasagiles.com.ar/trac/wiki/FacturaElectronicaExportacion
@@ -156,6 +156,7 @@ class WSFEXv1(BaseWS):
         id_impositivo="",
         moneda_id="PES",
         moneda_ctz=1.0,
+        cancela_misma_mon_ext="",
         obs_comerciales="",
         obs_generales="",
         forma_pago="",
@@ -183,6 +184,7 @@ class WSFEXv1(BaseWS):
             "id_impositivo": id_impositivo,
             "moneda_id": moneda_id,
             "moneda_ctz": moneda_ctz,
+            "cancela_misma_mon_ext": cancela_misma_mon_ext,
             "obs_comerciales": obs_comerciales,
             "obs_generales": obs_generales,
             "forma_pago": forma_pago,
@@ -278,6 +280,7 @@ class WSFEXv1(BaseWS):
                 "Id_impositivo": f["id_impositivo"],
                 "Moneda_Id": f["moneda_id"],
                 "Moneda_ctz": f["moneda_ctz"],
+                "CanMisMonExt": f["cancela_misma_mon_ext"] if (f["moneda_id"] != "PES" and f["tipo_cbte"] == 19) else None,
                 "Obs_comerciales": f["obs_comerciales"],
                 "Imp_total": f["imp_total"],
                 "Obs": f["obs_generales"],
@@ -707,11 +710,12 @@ class WSFEXv1(BaseWS):
             return ret
 
     @inicializar_y_capturar_excepciones
-    def GetParamCtz(self, moneda_id):
+    def GetParamCtz(self, moneda_id, fecha=False):
         "Recuperador de cotización de moneda"
         ret = self.client.FEXGetPARAM_Ctz(
             Auth={"Token": self.Token, "Sign": self.Sign, "Cuit": self.Cuit},
             Mon_id=moneda_id,
+            FchCotiz=fecha,
         )
         self.__analizar_errores(ret["FEXGetPARAM_CtzResult"])
         res = ret["FEXGetPARAM_CtzResult"].get("FEXResultGet")
